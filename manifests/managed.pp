@@ -33,9 +33,12 @@ define user::managed(
     $managehome = true,
     $homedir_mode = '0750',
     $sshkey = 'absent',
+    $sshkey_source = '',
+    $bashprofile_source = '',
     $password = 'absent',
     $password_crypted = true,
-    $shell = 'absent'
+    $shell = 'absent',
+    $tag               = ''
 ){
 
     $real_homedir = $homedir ? {
@@ -56,21 +59,50 @@ define user::managed(
         default => $shell,
     }
 
-    if size($name) > 31 {
-      fail("Usernames can't be longer than 31 characters. ${name} is too long!")
-    }
-
     user { $name:
-        ensure => $ensure,
-        allowdupe => false,
-        comment => "$real_name_comment",
-        home => $real_homedir,
+        ensure     => $ensure,
+        allowdupe  => false,
+        comment    => "$real_name_comment",
+        home       => $real_homedir,
         managehome => $managehome,
-        shell => $real_shell,
-        groups => $groups,
+        shell      => $real_shell,
+        groups     => $groups,
         membership => $membership,
+        tag        => $tag,
     }
 
+    # Manage authorized keys if $sshkey_source exists
+    if $sshkey_source != '' {
+      file { "${real_homedir}_ssh": 
+        ensure   => directory,
+        path     => "${real_homedir}/.ssh",
+        require  => File[$real_homedir],
+        owner    => $name,
+        group    => $name,
+        mode     => $homedir_mode,
+      }
+      file { "${real_homedir}_ssh_keys": 
+        ensure   => present,
+        path     => "${real_homedir}/.ssh/authorized_keys2",
+        require  => File[$real_homedir],
+        owner    => $name,
+        group    => $name,
+        mode     => '0600',
+        source   => "puppet:///modules/${sshkey_source}",
+      }
+    }
+
+    if $bashprofile_source != '' {
+      file { "${real_homedir}/.bash_profile":
+        ensure   => present,
+        path     => "${real_homedir}/.bash_profile",
+        require  => File[$real_homedir],
+        owner    => $name,
+        group    => $name,
+        mode     => '0644',
+        source   => "puppet:///modules/${bashprofile_source}",
+      }
+    }
 
     if $managehome {
         file{$real_homedir: }
@@ -193,7 +225,7 @@ define user::managed(
                         }
                     }
                     default: {
-                        require ruby::shadow
+                        # require ruby::shadow # 
                         if $password_crypted {
                             $real_password = $password
                         } else {

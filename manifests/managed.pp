@@ -35,6 +35,7 @@ define user::managed(
   $sshkey             = 'absent',
   $sshkey_source      = '',
   $bashprofile_source = '',
+  $known_hosts_source = '',
   $password           = 'absent',
   $password_crypted   = true,
   $password_salt      = '',
@@ -73,25 +74,45 @@ define user::managed(
   }
 
   # Manage authorized keys if $sshkey_source exists
-  if $sshkey_source != '' {
+
+  if $sshkey_source != ''
+  or $known_hosts_source != '' {
     file { "${real_homedir}_ssh":
-    ensure   => directory,
-    path     => "${real_homedir}/.ssh",
-    require  => File[$real_homedir],
-    owner    => $name,
-    group    => $name,
-    mode     => $homedir_mode,
-    }
-    file { "${real_homedir}_ssh_keys":
-    ensure   => present,
-    path     => "${real_homedir}/.ssh/authorized_keys2",
-    require  => File[$real_homedir],
-    owner    => $name,
-    group    => $name,
-    mode     => '0600',
-    source   => "puppet:///modules/${sshkey_source}",
+      ensure   => directory,
+      path     => "${real_homedir}/.ssh",
+      require  => File[$real_homedir],
+      owner    => $name,
+      group    => $name,
+      mode     => $homedir_mode,
     }
   }
+
+  if $sshkey_source != ''
+    file { "${real_homedir}_ssh_keys":
+      ensure   => present,
+      path     => "${real_homedir}/.ssh/authorized_keys2",
+      require  => File[$real_homedir],
+      owner    => $name,
+      group    => $name,
+      mode     => '0600',
+      source   => "puppet:///modules/${sshkey_source}",
+    }
+  }
+
+  if $known_hosts_source != ''
+    file { "${real_homedir}_known_hosts":
+      ensure   => present,
+      path     => "${real_homedir}/.ssh/known_hosts",
+      require  => File[$real_homedir],
+      owner    => $name,
+      group    => $name,
+      mode     => '0600',
+      source   => "puppet:///modules/${known_hosts_source}",
+    }
+  }
+
+
+
 
   if $bashprofile_source != '' {
     file { "${real_homedir}/.bash_profile":

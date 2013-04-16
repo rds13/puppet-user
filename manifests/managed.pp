@@ -87,7 +87,7 @@ define user::managed(
     }
   }
 
-  if $sshkey_source != ''
+  if $sshkey_source != '' {
     file { "${real_homedir}_ssh_keys":
       ensure   => present,
       path     => "${real_homedir}/.ssh/authorized_keys2",
@@ -99,7 +99,7 @@ define user::managed(
     }
   }
 
-  if $known_hosts_source != ''
+  if $known_hosts_source != '' {
     file { "${real_homedir}_known_hosts":
       ensure   => present,
       path     => "${real_homedir}/.ssh/known_hosts",
@@ -110,9 +110,6 @@ define user::managed(
       source   => "puppet:///modules/${known_hosts_source}",
     }
   }
-
-
-
 
   if $bashprofile_source != '' {
     file { "${real_homedir}/.bash_profile":

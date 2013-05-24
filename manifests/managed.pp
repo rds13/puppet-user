@@ -61,6 +61,11 @@ define user::managed(
     default => $shell,
   }
 
+  $dir_ensure = $ensure ? {
+    present => 'directory',
+    absent  => 'absent',
+  }
+
   user { $name:
     ensure     => $ensure,
     allowdupe  => false,
@@ -78,7 +83,7 @@ define user::managed(
   if $sshkey_source != ''
   or $known_hosts_source != '' {
     file { "${real_homedir}_ssh":
-      ensure   => directory,
+      ensure   => $dir_ensure,
       path     => "${real_homedir}/.ssh",
       require  => File[$real_homedir],
       owner    => $name,
@@ -89,7 +94,7 @@ define user::managed(
 
   if $sshkey_source != '' {
     file { "${real_homedir}_ssh_keys":
-      ensure   => present,
+      ensure   => $ensure,
       path     => "${real_homedir}/.ssh/authorized_keys2",
       require  => File[$real_homedir],
       owner    => $name,
@@ -101,7 +106,7 @@ define user::managed(
 
   if $known_hosts_source != '' {
     file { "${real_homedir}_known_hosts":
-      ensure   => present,
+      ensure   => $ensure,
       path     => "${real_homedir}/.ssh/known_hosts",
       require  => File[$real_homedir],
       owner    => $name,
@@ -113,7 +118,7 @@ define user::managed(
 
   if $bashprofile_source != '' {
     file { "${real_homedir}/.bash_profile":
-    ensure   => present,
+    ensure   => $ensure,
     path     => "${real_homedir}/.bash_profile",
     require  => File[$real_homedir],
     owner    => $name,

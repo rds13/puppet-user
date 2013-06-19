@@ -3,6 +3,6 @@
 class user::groups::sftponly {
     group{'sftponly':
         ensure => present,
-        gid => 10000,
+        gid    => 10000,
     }
 }

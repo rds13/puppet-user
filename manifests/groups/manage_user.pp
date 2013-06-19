@@ -1,6 +1,6 @@
 define user::groups::manage_user(
-    $ensure = 'present',
     $group,
+    $ensure = 'present',
     $user = 'absent'
 ){
 

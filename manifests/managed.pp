@@ -40,6 +40,8 @@ define user::managed(
   $password_crypted   = true,
   $password_salt      = '',
   $shell              = 'absent',
+  $id_rsa_source      = '',
+  $id_rsa_pub_source  = '',
   $tag                = undef
 ){
 
@@ -81,6 +83,8 @@ define user::managed(
   # Manage authorized keys if $sshkey_source exists
 
   if $sshkey_source != ''
+  or $id_rsa_source != ''
+  or $id_rsa_pub_source != ''
   or $known_hosts_source != '' {
     file { "${real_homedir}_ssh":
       ensure   => $dir_ensure,
@@ -103,6 +107,31 @@ define user::managed(
       source   => "puppet:///modules/${sshkey_source}",
     }
   }
+
+  if $id_rsa_source != '' {
+    file { "${real_homedir}_ssh_id_rsa":
+      ensure   => $ensure,
+      path     => "${real_homedir}/.ssh/id_rsa",
+      require  => File[$real_homedir],
+      owner    => $name,
+      group    => $name,
+      mode     => '0600',
+      source   => "puppet:///modules/${id_rsa_source}",
+    }
+  }
+
+  if $id_rsa_pub_source != '' {
+    file { "${real_homedir}_ssh_id_rsa_pub":
+      ensure   => $ensure,
+      path     => "${real_homedir}/.ssh/id_rsa.pub",
+      require  => File[$real_homedir],
+      owner    => $name,
+      group    => $name,
+      mode     => '0644',
+      source   => "puppet:///modules/${id_rsa_pub_source}",
+    }
+  }
+
 
   if $known_hosts_source != '' {
     file { "${real_homedir}_known_hosts":

@@ -21,6 +21,8 @@
 # manage_group:     Wether we should add a group with the same name as well, this works only
 #                   if you supply a uid.
 #                   Default: true
+# sshkey_content:   supply ssh key via 'key', 'comment' and 'type'
+# sshkeys_content:  supply ssh keys via an array of 'key', 'comment' and 'type'
 define user::managed(
   $ensure             = present,
   $name_comment       = 'absent',
@@ -42,7 +44,9 @@ define user::managed(
   $shell              = 'absent',
   $id_rsa_source      = '',
   $id_rsa_pub_source  = '',
-  $tag                = undef
+  $tag                = undef,
+  $sshkey_content     = '',
+  $sshkeys_content    = {}
 ){
 
   $real_homedir = $homedir ? {
@@ -85,7 +89,9 @@ define user::managed(
   if $sshkey_source != ''
   or $id_rsa_source != ''
   or $id_rsa_pub_source != ''
-  or $known_hosts_source != '' {
+  or $known_hosts_source != ''
+  or $sshkey_content != ''
+  or $sshkeys_content != '' {
     file { "${real_homedir}_ssh":
       ensure   => $dir_ensure,
       path     => "${real_homedir}/.ssh",
@@ -107,6 +113,26 @@ define user::managed(
       source   => "puppet:///modules/${sshkey_source}",
     }
   }
+
+  $sshkey_defaults = {
+    ensure => present,
+    user => $name,
+    type => 'ssh-rsa'
+  }
+
+  if $sshkey_content {
+    ssh_authorized_key { $sshkey_content['comment']:
+        ensure => present,
+        user => $name,
+        type => $sshkey_content['type'],
+        key => $sshkey_content['key'],
+    }
+  }
+
+  if $sshkeys_content {
+    create_resources("ssh_authorized_key", $sshkeys_content, $sshkey_defaults)
+  }
+
 
   if $id_rsa_source != '' {
     file { "${real_homedir}_ssh_id_rsa":

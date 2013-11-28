@@ -91,7 +91,7 @@ define user::managed(
   or $id_rsa_pub_source != ''
   or $known_hosts_source != ''
   or $sshkey_content != ''
-  or $sshkeys_content != '' {
+  or empty($sshkeys_content) {
     file { "${real_homedir}_ssh":
       ensure   => $dir_ensure,
       path     => "${real_homedir}/.ssh",
@@ -129,7 +129,7 @@ define user::managed(
     }
   }
 
-  if $sshkeys_content {
+  if !empty($sshkeys_content) {
     create_resources("ssh_authorized_key", $sshkeys_content, $sshkey_defaults)
   }
 

@@ -1,4 +1,4 @@
-# manifests/defines.pp
+# manifests/managed.pp
 
 # sshkey:           have to be handed over as the classname
 #                   containing the ssh_keys
@@ -45,8 +45,8 @@ define user::managed(
   $id_rsa_source      = '',
   $id_rsa_pub_source  = '',
   $tag                = undef,
-  $sshkey_content     = '',
-  $sshkeys_content    = {}
+  $sshkey_content     = {},
+  $sshkeys_content    = [] 
 ){
 
   $real_homedir = $homedir ? {
@@ -90,8 +90,8 @@ define user::managed(
   or $id_rsa_source != ''
   or $id_rsa_pub_source != ''
   or $known_hosts_source != ''
-  or $sshkey_content != ''
-  or empty($sshkeys_content) {
+  or !empty($sshkey_content)
+  or !empty($sshkeys_content) {
     file { "${real_homedir}_ssh":
       ensure   => $dir_ensure,
       path     => "${real_homedir}/.ssh",
@@ -120,19 +120,16 @@ define user::managed(
     type => 'ssh-rsa'
   }
 
-  if $sshkey_content {
-    ssh_authorized_key { $sshkey_content['comment']:
-        ensure => present,
-        user => $name,
-        type => $sshkey_content['type'],
-        key => $sshkey_content['key'],
-    }
+  if !empty($sshkey_content) {
+     ssh_authorized_key { $sshkey_content['comment']:
+         ensure => present,
+         user => $name,
+         type => $sshkey_content['type'],
+         key => $sshkey_content['key'],
+     }
   }
 
-  if !empty($sshkeys_content) {
-    create_resources("ssh_authorized_key", $sshkeys_content, $sshkey_defaults)
-  }
-
+  create_resources(ssh_authorized_key, $sshkeys_content, $sshkey_defaults)
 
   if $id_rsa_source != '' {
     file { "${real_homedir}_ssh_id_rsa":
@@ -323,3 +320,4 @@ define user::managed(
     }
   }
 }
+

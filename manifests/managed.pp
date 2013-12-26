@@ -129,7 +129,9 @@ define user::managed(
      }
   }
 
-  create_resources(ssh_authorized_key, $sshkeys_content, $sshkey_defaults)
+  if !empty($sshkeys_content) {
+    create_resources(ssh_authorized_key, $sshkeys_content, $sshkey_defaults)
+  }
 
   if $id_rsa_source != '' {
     file { "${real_homedir}_ssh_id_rsa":

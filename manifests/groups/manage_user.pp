@@ -1,3 +1,11 @@
+# manifests/groups/manage_user.pp
+
+# group:   name of the group to add user to.
+#
+# ensure:  if the group is present.
+#          Default : present
+# user:    user to add to group otherwise defaults to name.
+#
 define user::groups::manage_user(
     $group,
     $ensure = 'present',
@@ -24,4 +32,3 @@ define user::groups::manage_user(
         }
     }
 }
-

@@ -46,7 +46,7 @@ define user::managed(
   $id_rsa_pub_source  = '',
   $tag                = undef,
   $sshkey_content     = {},
-  $sshkeys_content    = [] 
+  $sshkeys_content    = []
 ){
 
   $real_homedir = $homedir ? {
@@ -116,17 +116,17 @@ define user::managed(
 
   $sshkey_defaults = {
     ensure => present,
-    user => $name,
-    type => 'ssh-rsa'
+    user   => $name,
+    type   => 'ssh-rsa'
   }
 
   if !empty($sshkey_content) {
-     ssh_authorized_key { $sshkey_content['comment']:
-         ensure => present,
-         user => $name,
-         type => $sshkey_content['type'],
-         key => $sshkey_content['key'],
-     }
+    ssh_authorized_key { $sshkey_content['comment']:
+      ensure => present,
+      user   => $name,
+      type   => $sshkey_content['type'],
+      key    => $sshkey_content['key'],
+    }
   }
 
   if !empty($sshkeys_content) {
@@ -172,13 +172,13 @@ define user::managed(
 
   if $bashprofile_source != '' {
     file { "${real_homedir}/.bash_profile":
-    ensure   => $ensure,
-    path     => "${real_homedir}/.bash_profile",
-    require  => File[$real_homedir],
-    owner    => $name,
-    group    => $name,
-    mode     => '0644',
-    source   => "puppet:///modules/${bashprofile_source}",
+      ensure   => $ensure,
+      path     => "${real_homedir}/.bash_profile",
+      require  => File[$real_homedir],
+      owner    => $name,
+      group    => $name,
+      mode     => '0644',
+      source   => "puppet:///modules/${bashprofile_source}",
     }
   }
 

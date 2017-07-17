@@ -98,7 +98,7 @@ define user::managed(
       require  => File[$real_homedir],
       owner    => $name,
       group    => $name,
-      mode     => $homedir_mode,
+      mode     => '0700',
     }
   }
 

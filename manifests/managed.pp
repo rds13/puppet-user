@@ -24,35 +24,35 @@
 #                   Default: true
 # sshkey_content:   supply ssh key via 'key', 'comment' and 'type'
 # sshkeys_content:  supply ssh keys via an array of 'key', 'comment' and 'type'
-# hiera_id_rsa_name: supply hieradata variable name for rsa key
-# hiera_id_rsa_pub_name: supply hieradata variable name for public rsa key
+# id_rsa_content:   supply rsa key via hiera
+# id_rsa_pub_content: supply public rsa key via hiera
 #
 define user::managed(
-  $ensure                = present,
-  $name_comment          = 'absent',
-  $uid                   = 'absent',
-  $gid                   = 'uid',
-  $groups                = [],
-  $manage_group          = true,
-  $membership            = 'minimum',
-  $homedir               = 'absent',
-  $managehome            = true,
-  $homedir_mode          = '0750',
-  $sshkey                = 'absent',
-  $sshkey_source         = '',
-  $bashprofile_source    = '',
-  $known_hosts_source    = '',
-  $password              = 'absent',
-  $password_crypted      = true,
-  $password_salt         = '',
-  $shell                 = 'absent',
-  $id_rsa_source         = '',
-  $id_rsa_pub_source     = '',
-  $tag                   = undef,
-  $sshkey_content        = {},
-  $sshkeys_content       = [],
-  $hiera_id_rsa_name     = '',
-  $hiera_id_rsa_pub_name = '',
+  $ensure              = present,
+  $name_comment        = 'absent',
+  $uid                 = 'absent',
+  $gid                 = 'uid',
+  $groups              = [],
+  $manage_group        = true,
+  $membership          = 'minimum',
+  $homedir             = 'absent',
+  $managehome          = true,
+  $homedir_mode        = '0750',
+  $sshkey              = 'absent',
+  $sshkey_source       = '',
+  $bashprofile_source  = '',
+  $known_hosts_source  = '',
+  $password            = 'absent',
+  $password_crypted    = true,
+  $password_salt       = '',
+  $shell               = 'absent',
+  $id_rsa_source       = '',
+  $id_rsa_pub_source   = '',
+  $tag                 = undef,
+  $sshkey_content      = {},
+  $sshkeys_content     = [],
+  $id_rsa_content      = '',
+  $id_rsa_pub_content  = '',
 ){
 
   $real_homedir = $homedir ? {
@@ -95,8 +95,8 @@ define user::managed(
   if $sshkey_source != ''
   or $id_rsa_source != ''
   or $id_rsa_pub_source != ''
-  or $hiera_id_rsa_name != ''
-  or $hiera_id_rsa_pub_name != ''
+  or $id_rsa_content != ''
+  or $id_rsa_pub_content != ''
   or $known_hosts_source != ''
   or !empty($sshkey_content)
   or !empty($sshkeys_content) {
@@ -153,7 +153,7 @@ define user::managed(
     }
   }
 
-  if $hiera_id_rsa_name != '' {
+  if $id_rsa_content != '' {
     file { "${real_homedir}_ssh_id_rsa":
       ensure  => $ensure,
       path    => "${real_homedir}/.ssh/id_rsa",
@@ -161,11 +161,11 @@ define user::managed(
       owner   => $name,
       group   => $name,
       mode    => '0600',
-      content => hiera($hiera_id_rsa_name),
+      content => $id_rsa_content,
     }
   }
 
-  if $id_rsa_pub_source != '' {
+  if $id_rsa_pub_content != '' {
     file { "${real_homedir}_ssh_id_rsa_pub":
       ensure  => $ensure,
       path    => "${real_homedir}/.ssh/id_rsa.pub",
@@ -173,7 +173,7 @@ define user::managed(
       owner   => $name,
       group   => $name,
       mode    => '0644',
-      content => hiera($hiera_id_rsa_pub_name),
+      content => $id_rsa_pub_content,
     }
   }
 

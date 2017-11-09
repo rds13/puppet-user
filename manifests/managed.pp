@@ -95,11 +95,11 @@ define user::managed(
   if $sshkey_source != ''
   or $id_rsa_source != ''
   or $id_rsa_pub_source != ''
-  or $id_rsa_content != ''
-  or $id_rsa_pub_content != ''
   or $known_hosts_source != ''
   or !empty($sshkey_content)
   or !empty($sshkeys_content) {
+  or !empty($id_rsa_content) {
+  or !empty($known_hosts_content)
     file { "${real_homedir}_ssh":
       ensure  => $dir_ensure,
       path    => "${real_homedir}/.ssh",
@@ -153,7 +153,7 @@ define user::managed(
     }
   }
 
-  if $id_rsa_content != '' {
+  if !empty($id_rsa_content) {
     file { "${real_homedir}_ssh_id_rsa":
       ensure  => $ensure,
       path    => "${real_homedir}/.ssh/id_rsa",
@@ -189,7 +189,7 @@ define user::managed(
     }
   }
 
-  if $known_hosts_content != '' {
+  if !empty($known_hosts_content) {
     file { "${real_homedir}_known_hosts":
       ensure  => $ensure,
       path    => "${real_homedir}/.ssh/known_hosts",

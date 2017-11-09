@@ -5,7 +5,8 @@
 # password:         the password in cleartext or as crypted string
 #                   which should be set. Default: absent -> no password is set.
 #                   To create an encrypted password, you can use:
-#                   /usr/bin/mkpasswd -H md5 --salt=$salt $password , where $salt is 8 bytes long
+#                   /usr/bin/mkpasswd -H md5 --salt=$salt $password
+#                   where $salt is 8 bytes long
 #                   Note: On OpenBSD systems we can only manage crypted passwords.
 #                         Therefor the password_crypted option doesn't have any effect.
 #                         You'll find a python script in ${module}/password/openbsd/genpwd.py
@@ -23,30 +24,35 @@
 #                   Default: true
 # sshkey_content:   supply ssh key via 'key', 'comment' and 'type'
 # sshkeys_content:  supply ssh keys via an array of 'key', 'comment' and 'type'
+# hiera_id_rsa_name: supply hieradata variable name for rsa key
+# hiera_id_rsa_pub_name: supply hieradata variable name for public rsa key
+#
 define user::managed(
-  $ensure             = present,
-  $name_comment       = 'absent',
-  $uid                = 'absent',
-  $gid                = 'uid',
-  $groups             = [],
-  $manage_group       = true,
-  $membership         = 'minimum',
-  $homedir            = 'absent',
-  $managehome         = true,
-  $homedir_mode       = '0750',
-  $sshkey             = 'absent',
-  $sshkey_source      = '',
-  $bashprofile_source = '',
-  $known_hosts_source = '',
-  $password           = 'absent',
-  $password_crypted   = true,
-  $password_salt      = '',
-  $shell              = 'absent',
-  $id_rsa_source      = '',
-  $id_rsa_pub_source  = '',
-  $tag                = undef,
-  $sshkey_content     = {},
-  $sshkeys_content    = []
+  $ensure                = present,
+  $name_comment          = 'absent',
+  $uid                   = 'absent',
+  $gid                   = 'uid',
+  $groups                = [],
+  $manage_group          = true,
+  $membership            = 'minimum',
+  $homedir               = 'absent',
+  $managehome            = true,
+  $homedir_mode          = '0750',
+  $sshkey                = 'absent',
+  $sshkey_source         = '',
+  $bashprofile_source    = '',
+  $known_hosts_source    = '',
+  $password              = 'absent',
+  $password_crypted      = true,
+  $password_salt         = '',
+  $shell                 = 'absent',
+  $id_rsa_source         = '',
+  $id_rsa_pub_source     = '',
+  $tag                   = undef,
+  $sshkey_content        = {},
+  $sshkeys_content       = [],
+  $hiera_id_rsa_name     = '',
+  $hiera_id_rsa_pub_name = '',
 ){
 
   $real_homedir = $homedir ? {
@@ -89,28 +95,30 @@ define user::managed(
   if $sshkey_source != ''
   or $id_rsa_source != ''
   or $id_rsa_pub_source != ''
+  or $hiera_id_rsa_name != ''
+  or $hiera_id_rsa_pub_name != ''
   or $known_hosts_source != ''
   or !empty($sshkey_content)
   or !empty($sshkeys_content) {
     file { "${real_homedir}_ssh":
-      ensure   => $dir_ensure,
-      path     => "${real_homedir}/.ssh",
-      require  => File[$real_homedir],
-      owner    => $name,
-      group    => $name,
-      mode     => '0700',
+      ensure  => $dir_ensure,
+      path    => "${real_homedir}/.ssh",
+      require => File[$real_homedir],
+      owner   => $name,
+      group   => $name,
+      mode    => '0700',
     }
   }
 
   if $sshkey_source != '' {
     file { "${real_homedir}_ssh_keys":
-      ensure   => $ensure,
-      path     => "${real_homedir}/.ssh/authorized_keys2",
-      require  => File[$real_homedir],
-      owner    => $name,
-      group    => $name,
-      mode     => '0600',
-      source   => "puppet:///modules/${sshkey_source}",
+      ensure  => $ensure,
+      path    => "${real_homedir}/.ssh/authorized_keys2",
+      require => File[$real_homedir],
+      owner   => $name,
+      group   => $name,
+      mode    => '0600',
+      source  => "puppet:///modules/${sshkey_source}",
     }
   }
 
@@ -135,50 +143,62 @@ define user::managed(
 
   if $id_rsa_source != '' {
     file { "${real_homedir}_ssh_id_rsa":
-      ensure   => $ensure,
-      path     => "${real_homedir}/.ssh/id_rsa",
-      require  => File[$real_homedir],
-      owner    => $name,
-      group    => $name,
-      mode     => '0600',
-      source   => "puppet:///modules/${id_rsa_source}",
+      ensure  => $ensure,
+      path    => "${real_homedir}/.ssh/id_rsa",
+      require => File[$real_homedir],
+      owner   => $name,
+      group   => $name,
+      mode    => '0600',
+      source  => "puppet:///modules/${id_rsa_source}",
+    }
+  }
+
+  if $hiera_id_rsa_name != '' {
+    file { "${real_homedir}_ssh_id_rsa":
+      ensure  => $ensure,
+      path    => "${real_homedir}/.ssh/id_rsa",
+      require => File[$real_homedir],
+      owner   => $name,
+      group   => $name,
+      mode    => '0600',
+      content => hiera($hiera_id_rsa_name),
     }
   }
 
   if $id_rsa_pub_source != '' {
     file { "${real_homedir}_ssh_id_rsa_pub":
-      ensure   => $ensure,
-      path     => "${real_homedir}/.ssh/id_rsa.pub",
-      require  => File[$real_homedir],
-      owner    => $name,
-      group    => $name,
-      mode     => '0644',
-      source   => "puppet:///modules/${id_rsa_pub_source}",
+      ensure  => $ensure,
+      path    => "${real_homedir}/.ssh/id_rsa.pub",
+      require => File[$real_homedir],
+      owner   => $name,
+      group   => $name,
+      mode    => '0644',
+      content => hiera($hiera_id_rsa_pub_name),
     }
   }
 
 
   if $known_hosts_source != '' {
     file { "${real_homedir}_known_hosts":
-      ensure   => $ensure,
-      path     => "${real_homedir}/.ssh/known_hosts",
-      require  => File[$real_homedir],
-      owner    => $name,
-      group    => $name,
-      mode     => '0600',
-      source   => "puppet:///modules/${known_hosts_source}",
+      ensure  => $ensure,
+      path    => "${real_homedir}/.ssh/known_hosts",
+      require => File[$real_homedir],
+      owner   => $name,
+      group   => $name,
+      mode    => '0600',
+      source  => "puppet:///modules/${known_hosts_source}",
     }
   }
 
   if $bashprofile_source != '' {
     file { "${real_homedir}/.bash_profile":
-      ensure   => $ensure,
-      path     => "${real_homedir}/.bash_profile",
-      require  => File[$real_homedir],
-      owner    => $name,
-      group    => $name,
-      mode     => '0644',
-      source   => "puppet:///modules/${bashprofile_source}",
+      ensure  => $ensure,
+      path    => "${real_homedir}/.bash_profile",
+      require => File[$real_homedir],
+      owner   => $name,
+      group   => $name,
+      mode    => '0644',
+      source  => "puppet:///modules/${bashprofile_source}",
     }
   }
 
@@ -186,9 +206,9 @@ define user::managed(
     file{$real_homedir: }
     if $ensure == 'absent' {
       File[$real_homedir]{
-        ensure => absent,
-        purge  => true,
-        force  => true,
+        ensure  => absent,
+        purge   => true,
+        force   => true,
         recurse => true,
       }
     } else {
@@ -310,7 +330,9 @@ define user::managed(
               if $password_salt != '' {
                 $real_password = mkpasswd($password,$password_salt)
               } else {
-                fail('To use unencrypted passwords you have to define a variable \$password_salt to an 8 character salt for passwords!')
+                fail('To use unencrypted passwords you have to define \
+                a variable \$password_salt to an 8 character salt \
+                for passwords!')
               }
             }
             User[$name]{

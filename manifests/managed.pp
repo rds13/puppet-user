@@ -8,7 +8,7 @@
 #                   /usr/bin/mkpasswd -H md5 --salt=$salt $password
 #                   where $salt is 8 bytes long
 #                   Note: On OpenBSD systems we can only manage crypted passwords.
-#                         Therefor the password_crypted option doesn't have any effect.
+#                         Therefore the password_crypted option doesn't have any effect.
 #                         You'll find a python script in ${module}/password/openbsd/genpwd.py
 #                         Which will help you to create such a password
 # password_crypted: if the supplied password is crypted or not.
@@ -19,13 +19,13 @@
 #                   absent: let the system take a gid
 #                   uid: take the same as the uid has if it isn't absent (*default*)
 #                   <value>: take this gid
-# manage_group:     Wether we should add a group with the same name as well, this works only
+# manage_group:     Whether we should add a group with the same name as well, this works only
 #                   if you supply a uid.
 #                   Default: true
 # sshkey_content:   supply ssh key via 'key', 'comment' and 'type'
 # sshkeys_content:  supply ssh keys via an array of 'key', 'comment' and 'type'
 # id_rsa_content:   supply rsa key via hiera
-# id_rsa_pub_content: supply public rsa key via hiera
+# known_hosts_content: supply known hosts content via hiera
 #
 define user::managed(
   $ensure              = present,
@@ -52,7 +52,7 @@ define user::managed(
   $sshkey_content      = {},
   $sshkeys_content     = [],
   $id_rsa_content      = '',
-  $id_rsa_pub_content  = '',
+  $known_hosts_content = '',
 ){
 
   $real_homedir = $homedir ? {
@@ -165,7 +165,7 @@ define user::managed(
     }
   }
 
-  if $id_rsa_pub_content != '' {
+  if $id_rsa_pub_source != '' {
     file { "${real_homedir}_ssh_id_rsa_pub":
       ensure  => $ensure,
       path    => "${real_homedir}/.ssh/id_rsa.pub",
@@ -173,10 +173,9 @@ define user::managed(
       owner   => $name,
       group   => $name,
       mode    => '0644',
-      content => $id_rsa_pub_content,
+      source  => "puppet:///modules/${id_rsa_pub_source}",
     }
   }
-
 
   if $known_hosts_source != '' {
     file { "${real_homedir}_known_hosts":
@@ -187,6 +186,18 @@ define user::managed(
       group   => $name,
       mode    => '0600',
       source  => "puppet:///modules/${known_hosts_source}",
+    }
+  }
+
+  if $known_hosts_content != '' {
+    file { "${real_homedir}_known_hosts":
+      ensure  => $ensure,
+      path    => "${real_homedir}/.ssh/known_hosts",
+      require => File[$real_homedir],
+      owner   => $name,
+      group   => $name,
+      mode    => '0600',
+      content => $known_hosts_content,
     }
   }
 

@@ -98,8 +98,8 @@ define user::managed(
   or $known_hosts_source != ''
   or !empty($sshkey_content)
   or !empty($sshkeys_content)
-  or !empty($id_rsa_content) {
-  or !empty($known_hosts_content)
+  or !empty($id_rsa_content)
+  or !empty($known_hosts_content) {
     file { "${real_homedir}_ssh":
       ensure  => $dir_ensure,
       path    => "${real_homedir}/.ssh",

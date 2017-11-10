@@ -97,7 +97,7 @@ define user::managed(
   or $id_rsa_pub_source != ''
   or $known_hosts_source != ''
   or !empty($sshkey_content)
-  or !empty($sshkeys_content) {
+  or !empty($sshkeys_content)
   or !empty($id_rsa_content) {
   or !empty($known_hosts_content)
     file { "${real_homedir}_ssh":

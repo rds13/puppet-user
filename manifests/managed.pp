@@ -48,7 +48,7 @@ define user::managed(
   $shell               = 'absent',
   $id_rsa_source       = '',
   $id_rsa_pub_source   = '',
-  $tag                 = undef,
+  $user_tag            = undef,
   $sshkey_content      = {},
   $sshkeys_content     = [],
   $id_rsa_content      = '',
@@ -87,7 +87,7 @@ define user::managed(
     shell      => $real_shell,
     groups     => $groups,
     membership => $membership,
-    tag        => $tag,
+    tag        => $user_tag,
   }
 
   # Manage authorized keys if $sshkey_source exists
@@ -271,7 +271,7 @@ define user::managed(
         ensure => absent,
         }
         case $::operatingsystem {
-        OpenBSD: {
+        'OpenBSD': {
           Group[$name]{
           before => User[$name],
           }
@@ -296,7 +296,7 @@ define user::managed(
         }
         if $ensure == 'absent' {
           case $::operatingsystem {
-          OpenBSD: {
+          'OpenBSD': {
             Group[$name]{
             before => User[$name],
             }
@@ -326,7 +326,7 @@ define user::managed(
 
       if $password != 'absent' {
         case $::operatingsystem {
-          openbsd: {
+          'OpenBSD': {
             exec { "setpass ${name}":
               unless  => "grep -q '^${name}:${password}:' /etc/master.passwd",
               command => "usermod -p '${password}' ${name}",
